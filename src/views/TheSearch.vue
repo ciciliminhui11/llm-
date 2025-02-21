@@ -1,5 +1,26 @@
 <template>
-    <div class="chat-container">
+    <el-button @click="dialogVisible = true"></el-button>
+    <el-dialog
+    v-model="dialogVisible"
+    width="50%"
+    >
+    <div class="the-search">
+    <!-- 输入框和发送按钮区域 -->
+        <div class="status-area">
+            <el-button @click="setSearch">搜索</el-button><el-button @click="setAsked">对话</el-button>
+        </div>
+        <div class="input-area">
+            <el-input v-model="newMessage" placeholder="请输入消息..." clearable class="message-input"
+                @keyup.enter="sendMessage"></el-input>
+
+            <!-- 发送按钮 -->
+            <el-button v-if="isAsked" type="primary" class="send-button" :disabled="isButtonDisabled"
+                @click="sendMessage">发送</el-button>
+            <el-button v-if="!isAsked" type="primary" class="send-button" :disabled="isButtonDisabled"
+                @click="sendMessage">搜索</el-button><!--todo,搜索事件-->
+            </div>
+        <div >
+        <div v-if="isAsked" class="chat-container">
         <!-- 聊天记录区域 -->
         <div class="chat-box">
             <!-- 循环遍历 messages 数组，显示每一条消息 -->
@@ -17,17 +38,11 @@
                 </el-row>
             </div>
         </div>
-
-        <!-- 输入框和发送按钮区域 -->
-        <div class="input-area">
-            <el-input v-model="newMessage" placeholder="请输入消息..." clearable class="message-input"
-                @keyup.enter="sendMessage"></el-input>
-
-            <!-- 发送按钮 -->
-            <el-button type="primary" class="send-button" :disabled="isButtonDisabled"
-                @click="sendMessage">发送</el-button>
+            </div>
+        <div v-else>这是搜索状态</div>
+            </div>
         </div>
-    </div>
+    </el-dialog>
 </template>
 
 <script lang="ts">
@@ -42,11 +57,12 @@ export default defineComponent({
     },
     setup() {
         const isButtonDisabled = ref(false);
+        const dialogVisible = ref(false);
+        const isAsked = ref(false);
         // 定义存储聊天记录的数组，每条消息包括发送者（user 或 bot）和消息内容
         const messages = ref([
             { sender: 'bot', content: '你好！欢迎来到聊天界面。' },
         ]);
-
         // 定义输入框中的消息内容
         const newMessage = ref('');
 
@@ -70,13 +86,25 @@ export default defineComponent({
             }
         };
 
+        const setAsked = () => {
+            isAsked.value = true;
+        }
+
+        const setSearch = () => {
+            isAsked.value = false;
+        }
+
         return {
             messages,
             newMessage,
             userAvatar,
             botAvatar,
             sendMessage,
-            isButtonDisabled
+            isButtonDisabled,
+            isAsked,
+            setAsked,
+            setSearch,
+            dialogVisible
         };
     }
 });
@@ -84,6 +112,12 @@ export default defineComponent({
 
 <style scoped>
 /* 聊天容器 */
+
+.the-search {
+    display: fixed;
+    margin: 100px  100px  0px 100px;
+}
+
 .chat-container {
     width: 100%;
     max-width: 600px;

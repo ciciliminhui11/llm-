@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import home from '../views/home.vue';  // 导入 Home 页面
-import chat_1 from '../views/chat_1.vue';
+import chat_1 from '../views/TheSearch.vue';
 import chat_2 from '../views/chat_2.vue';
 import chat_3 from '../views/chat_3.vue';
 

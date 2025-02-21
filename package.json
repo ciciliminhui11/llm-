@@ -13,14 +13,16 @@
     "axios": "^1.7.9",
     "element-plus": "^2.9.4",
     "markdown-it": "^14.1.0",
+    "tslib": "^2.8.1",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3",
+    "vuetify": "^3.7.13",
     "vuex": "^4.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@types/markdown-it": "^14.1.2",
-    "@types/node": "^22.13.1",
+    "@types/node": "^22.13.4",
     "@typescript-eslint/eslint-plugin": "^8.23.0",
     "@typescript-eslint/parser": "^8.23.0",
     "@vitejs/plugin-vue": "^5.2.1",
