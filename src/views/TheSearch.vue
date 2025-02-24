@@ -159,9 +159,9 @@ export default defineComponent({
                             <el-avatar :src="message.sender === 'user' ? userAvatar : botAvatar"
                             class="message-avatar" ></el-avatar>
                             <!-- 显示消息内容 -->
-                            <el-card class="message-content" :body-style="{ padding: '0px'  }">
+                            <div class="message-content" :body-style="{ padding: '0px'  }">
                                 <markdown-renderer :markdownContent="message.content" />
-                        </el-card>
+                        </div>
                         </div>
                     </el-col>
                 </el-row>
@@ -252,6 +252,7 @@ export default defineComponent({
 /* 消息内容的样式 */
 .message-content {
     display: inline-block;
+    word-break: break-all;
     max-width: 80%;
     background-color: #e0e0e0;
     border-radius: 10px;
