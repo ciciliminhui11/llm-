@@ -3,10 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main       # 触发该工作流的分支
+      - master       # 触发该工作流的分支
   pull_request:
     branches:
-      - main       # 触发 pull request 时执行该工作流
+      - master       # 触发 pull request 时执行该工作流
 
 jobs:
   build:
