@@ -2,7 +2,7 @@
 
 <script lang="ts">
 import { Chat } from '../service/coze_SDK';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref,watch,nextTick } from 'vue';
 import MarkdownRenderer from '../components/markdown.vue'; //markdown渲染组件
 console.log('@/assets')
 import userAvatarImg from '../assets/user.png'; //用户头像
@@ -35,11 +35,14 @@ export default defineComponent({
                 // 禁用按钮，开始发送
                 isButtonDisabled.value = true;
 
+                //使用temp传输消息，清空输入框，避免重复发送
+                const temp = newMessage.value;
+                newMessage.value = '';
+
                 // 调用 SDK 的 sendMessage 方法
-                await chat.initiateChat(newMessage.value, messages.value);
+                await chat.initiateChat(temp, messages.value);
 
                 // 清空输入框，恢复按钮
-                newMessage.value = '';
                 isButtonDisabled.value = false;
             }
         };
@@ -52,6 +55,44 @@ export default defineComponent({
             isAsked.value = false;
         }
 
+        watch(
+          messages,
+          async () => {
+            try {
+              await nextTick()
+              ScrollToBottom()
+            } catch (error) {
+              console.error('消息滚动失败:', error)
+            }
+          },
+          {
+            deep: true, // 深度监听数组变化
+            immediate: false // 组件初始化时不执行
+          }
+        )
+
+
+        //实现消息自动滚动
+        const chatBox = ref<HTMLElement | null>(null)
+
+        const ScrollToBottom = () => {
+            const container = chatBox.value;
+            if (!container) return;
+
+             // 是否已经接近底部（阈值可调）
+            const isNearBottom = 
+            container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+
+            // 只有当前在底部附近时才自动滚动
+            if (isNearBottom) {
+            container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth' // 可选平滑滚动
+    });
+  }
+        }
+        
+
         return {
             messages,
             newMessage,
@@ -62,7 +103,8 @@ export default defineComponent({
             isAsked,
             setAsked,
             setSearch,
-            dialogVisible
+            dialogVisible,
+            chatBox
         };
     }
 });
@@ -96,25 +138,28 @@ export default defineComponent({
                 @keyup.enter="sendMessage"></el-input>
 
             <!-- 发送按钮 -->
-            <el-button v-if="isAsked" type="primary" class="send-button" :disabled="isButtonDisabled"
-                @click="sendMessage">发送</el-button><!-- todo：停止发送消息，改变样式以及绑定取消事件-->
-            <el-button v-if="!isAsked" type="primary" class="send-button" :disabled="isButtonDisabled"
+            <el-button v-if="isAsked && !isButtonDisabled" type="primary" class="send-button" :disabled="isButtonDisabled"
+                @click="sendMessage">发送</el-button>
+            <el-button v-if="isAsked && isButtonDisabled" type="primary" class="send-button" :disabled="isButtonDisabled"
+                >发送中</el-button>
+                <!-- todo：停止发送消息，改变样式以及绑定取消事件-->
+            <el-button v-if="!isAsked" type="primary" class="send-button"
                 @click="sendMessage">搜索</el-button><!--todo,搜索事件-->
             </div>
         <div >
         <div v-if="isAsked" class="chat-container">
         <!-- 聊天记录区域 -->
-        <div class="chat-box">
+        <div ref="chatBox" class="chat-box">
             <!-- 循环遍历 messages 数组，显示每一条消息 -->
             <div v-for="(message, index) in messages" :key="index" class="message-item">
-                <el-row :justify="message.sender === 'user' ? 'end' : 'start'">
+                <el-row :justify="'start'">
                     <el-col :span="23">
                         <div class="message-container">
                             <!-- 显示发送者头像，可以根据需要修改 -->
                             <el-avatar :src="message.sender === 'user' ? userAvatar : botAvatar"
                             class="message-avatar" ></el-avatar>
                             <!-- 显示消息内容 -->
-                            <el-card class="message-content" :body-style="{ padding: '10px' }">
+                            <el-card class="message-content" :body-style="{ padding: '0px'  }">
                                 <markdown-renderer :markdownContent="message.content" />
                         </el-card>
                         </div>

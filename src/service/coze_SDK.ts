@@ -12,6 +12,7 @@ export class Chat {
       baseURL: 'https://api.coze.cn'
     });
   }
+  
   async cancel_chat(conversationId: string,chatId: string) {
     try {
       // 发起请求获取列表数据
