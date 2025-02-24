@@ -42,3 +42,11 @@ jobs:
       # 步骤 7：构建项目
       - name: Build project
         run: npm run build   # 如果有构建脚本，执行构建任务
+
+      #部署
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist  # 构建输出的目录
+          publish_branch: gh-pages  # 推送到 gh-pages 分支
