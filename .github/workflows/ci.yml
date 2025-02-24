@@ -42,3 +42,10 @@ jobs:
       # 步骤 7：构建项目
       - name: Build project
         run: npm run build   # 如果有构建脚本，执行构建任务
+      # 部署到 GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages  # 指定部署的目标分支
+          folder: dist      # 指定构建输出的文件夹（根据你的构建工具而定，通常是 dist 或 build）
+          token: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub 自动生成的令牌进行身份验证  
