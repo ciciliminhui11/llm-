@@ -6,7 +6,8 @@
     "test": "vitest",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "eslint . --fix"
+    "lint": "eslint . --fix",
+    "tsc": "tsc"
   },
   "dependencies": {
     "@coze/api": "^1.0.19",

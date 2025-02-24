@@ -1,36 +1,44 @@
-name: CI/CD for Vue Project
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
-      - main    # 或其他你想监控的分支，例如 'master'
+      - main       # 触发该工作流的分支
   pull_request:
     branches:
-      - main    # 你也可以为 pull request 设置触发
+      - main       # 触发 pull request 时执行该工作流
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # 使用 Ubuntu 环境来构建
+    runs-on: ubuntu-latest   # 运行在 Ubuntu 环境中
 
     steps:
-      # 检出代码
+      # 步骤 1：检出代码
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # 设置 Node.js 环境
+      # 步骤 2：设置 Node.js 环境
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '16'  # 你可以根据需要调整 Node.js 的版本
+          node-version: '16'   # 设置 Node.js 版本
 
-      # 安装依赖
+      # 步骤 3：安装依赖
       - name: Install dependencies
         run: npm install
 
-      # 运行测试（可选）
-      - name: Run tests
-        run: npm run test --if-present  # 如果你有测试脚本
+      # 步骤 4：运行 Lint 检查
+      - name: Run ESLint
+        run: npm run lint   # 如果你有 lint 脚本配置
 
-      # 构建 Vue 项目
-      - name: Build Vue project
-        run: npm run build
+      # 步骤 5：运行 TypeScript 检查
+      - name: Run TypeScript check
+        run: npm run tsc --noEmit   # 使用 TypeScript 的检查命令
+
+      # 步骤 6：运行自动化测试
+      - name: Run tests
+        run: npm test   # 运行自动化测试，确保没有错误
+
+      # 步骤 7：构建项目
+      - name: Build project
+        run: npm run build   # 如果有构建脚本，执行构建任务
