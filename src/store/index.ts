@@ -1,8 +1,8 @@
 import { createStore } from 'vuex'
+import { layoutModule } from './layout'
 
 export default createStore({
-  state: {
-  },
+
   getters: {
   },
   mutations: {
@@ -10,5 +10,6 @@ export default createStore({
   actions: {
   },
   modules: {
+    layout: layoutModule
   }
 })
