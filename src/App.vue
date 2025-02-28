@@ -1,5 +1,3 @@
-
-
 <template>
   <router-view></router-view> <!-- 展示路由页面 -->
 </template>
@@ -13,3 +11,8 @@ export default defineComponent({
   name: 'App',
 });
 </script>
+<style>
+body {
+  margin: 0px
+}
+</style>

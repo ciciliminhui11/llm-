@@ -12,16 +12,16 @@ export class Chat {
       baseURL: 'https://api.coze.cn'
     });
   }
-  
-  async cancel_chat(conversationId: string,chatId: string) {
+
+  async cancel_chat(conversationId: string, chatId: string) {
     try {
       // 发起请求获取列表数据
-      const response = await this.client.chat.cancel(conversationId,chatId);
+      const response = await this.client.chat.cancel(conversationId, chatId);
 
       console.log("Received response:", response); // 确保你收到了响应
-      if(response.status === "canceled"){
+      if (response.status === "canceled") {
         return 'canceled'
-      }else{
+      } else {
         return 'false'
       }
     } catch (error) {
@@ -71,7 +71,7 @@ export class Chat {
           msg.status = "created";
           console.log(msg)
           onDataUpdate(msg);
-        } 
+        }
         else if (part.event === ChatEventType.CONVERSATION_MESSAGE_DELTA) {
           msg.content_type = part.data.content_type;
           msg.content += part.data.content || "";//加入内容
@@ -80,15 +80,15 @@ export class Chat {
           console.log(msg.content)
           onDataUpdate(msg);
 
-        } 
+        }
         else if (part.event === ChatEventType.CONVERSATION_MESSAGE_COMPLETED && part.data.type === "answer") {
           msg.content = part.data.content;
           console.log('最终回答：' + part.data.content)
           msg.status = "message_completed";
           onDataUpdate(msg);
 
-         } 
-         else if (part.event === ChatEventType.CONVERSATION_CHAT_COMPLETED) {
+        }
+        else if (part.event === ChatEventType.CONVERSATION_CHAT_COMPLETED) {
           msg.status = "chat_completed";
           console.log(part.data.usage);
           onDataUpdate(msg);
@@ -182,7 +182,7 @@ export class Bot {
     });
   }
 
-  async bots_list(bots: any[]) {
+  async bots_list() {
     try {
       // 发起请求获取列表数据
       const response = await this.client.bots.list({
@@ -195,10 +195,9 @@ export class Bot {
 
       // 提取 space_bots 数据
       const list = response.space_bots;
-
-      // 清空原数组并将新数据加入
-      bots.length = 0;  // 清空原数组
+      const bots: any[] = [];
       bots.push(...list); // 将新数据加入
+      return bots
 
       console.log("Updated bots:", bots);  // 输出更新后的 bots 数组
     } catch (error) {

@@ -1,19 +1,10 @@
 <template>
-  <el-container style="height: 100%;">
+  <el-container style="height: 100vh;">
     <!-- Aside 部分 -->
-    <el-aside :style="{ width: asideWidth }" class="aside-transition" style="overflow: hidden;">
+    <el-aside :style="{ width: asideWidth } " class="aside-transition" style="overflow: hidden; height: 100%;">
       <conversationAside></conversationAside>
     </el-aside>
-
-    <el-main>
-      <!-- 这里放置你的主要内容 -->
-      <div style="padding: 20px;">
-        <h1>主内容区</h1>
-        <p>这里是主要内容</p>
-        <!-- 使用 AsideToggleButton 组件 -->
-        <AsideToggleButton />
-      </div>
-    </el-main>
+      <chat></chat>
   </el-container>
 </template>
 
@@ -21,7 +12,7 @@
 import { computed } from 'vue';
 import { useStore } from 'vuex';
 import conversationAside from "@/components/conversationAside.vue";
-import AsideToggleButton from "@/components/collapseButton.vue";
+import chat from "@/components/chatOnly.vue";
 
 // 获取 Vuex store
 const store = useStore();
@@ -32,6 +23,8 @@ const asideWidth = computed(() => store.getters.asideWidth);
 
 <style scoped>
 .aside-transition {
+  border: 0;
+  background-color: #f5f5f5ed;
   transition: width 0.4s ease;
 }
 </style>
