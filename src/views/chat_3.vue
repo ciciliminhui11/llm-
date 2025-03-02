@@ -1,8 +1,14 @@
 <template>
   <div>
     <h1>上传文件</h1>
-    <input type="file" @change="handleFileChange" />
-    <button @click="uploadFile" :disabled="!file">上传</button>
+    <el-upload
+      action=""
+      :http-request="uploadFile"
+      :before-upload="beforeUpload"
+      :show-file-list="false"
+    >
+      <el-button type="primary">点击上传</el-button>
+    </el-upload>
     <div v-if="uploading">正在上传...</div>
     <div v-if="uploadSuccess">上传成功！</div>
     <div v-if="uploadError" class="error">上传失败：{{ uploadError }}</div>
@@ -11,19 +17,23 @@
 
 <script setup>
 import { ref } from 'vue';
-import { File } from '../service/coze_SDK';  
+import { ElMessage } from 'element-plus';
+import { File } from '../service/coze_SDK';
 
 const file = ref(null);
 const uploading = ref(false);
 const uploadSuccess = ref(false);
 const uploadError = ref(null);
 
-const handleFileChange = (event) => {
-  file.value = event.target.files[0]; // 获取选择的第一个文件
+const beforeUpload = (selectedFile) => {
+  file.value = selectedFile;
+  console.log(file.value)
+  // return false; // 阻止默认的上传行为
 };
 
 const uploadFile = async () => {
   if (!file.value) {
+    ElMessage.error('请选择文件');
     return;
   }
 

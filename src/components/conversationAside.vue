@@ -13,33 +13,31 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
+import { useStore } from 'vuex';
 
 export default defineComponent({
     name: 'ConversationAside',
     setup() {
-        const conversations = ref([
-            { id: '1', name: 'Conversation 1' },
-            { id: '2', name: 'Conversation 2' },
-            { id: '3', name: 'Conversation 3' },
-            { id: '4', name: 'Conversation 4' },
-            { id: '5', name: 'Conversation 5' },
-            { id: '6', name: 'Conversation 6' },
-            { id: '7', name: 'Conversation 7' },
-            { id: '8', name: 'Conversation 8' },
-            { id: '9', name: 'Conversation 9' },
-            { id: '10', name: 'Conversation 10' },
-            { id: '11', name: 'Conversation 11' },
-            { id: '12', name: 'Conversation 12' },
-            { id: '13', name: 'Conversation 13' },
-            { id: '14', name: 'Conversation 14' },
-            // { id: '15', name: 'Conversation 15' },
-        ]);
+        const store = useStore();
+        const activeIndex = ref(store.state.selectedConversationId);
+        const conversations = computed(() => store.getters.conversations);
 
-        const activeIndex = ref('1');
+        // 监听新会话的添加
+        watch(() => store.state.conversations, (newConversations) => {
+            if (newConversations.length > 0 && newConversations[0].id !== activeIndex.value) {
+                activeIndex.value = newConversations[0].id;
+            }
+        });
+
+        // 监听 selectedConversationId 的变化
+        watch(() => store.state.selectedConversationId, (newId) => {
+            activeIndex.value = newId;
+        });
 
         const handleSelect = (key: string, keyPath: string[]) => {
             console.log(`Selected: ${key}, Path: ${keyPath}`);
+            store.dispatch('setSelectedConversationId', key);
         };
 
         return {

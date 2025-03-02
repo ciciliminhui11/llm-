@@ -19,6 +19,7 @@ const store = useStore();
 
 // 从 Vuex 中获取 asideWidth
 const asideWidth = computed(() => store.getters.asideWidth);
+
 </script>
 
 <style scoped>

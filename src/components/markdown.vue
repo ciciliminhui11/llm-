@@ -6,7 +6,7 @@
 import { defineComponent, PropType, nextTick } from 'vue';
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
-import 'highlight.js/styles/github.css';
+import 'highlight.js/styles/github-dark.css'; // 使用暗色主题
 
 const md = new MarkdownIt({
   html: true,
@@ -15,14 +15,13 @@ const md = new MarkdownIt({
   highlight: (str, lang) => {
     if (lang && hljs.getLanguage(lang)) {
       try {
-        return hljs.highlight(lang, str).value;
+        return `<div class="code-language">${lang}</div>` + hljs.highlight(lang, str).value;
       } catch (e) {
         console.log(e);
       }
     }
     return '';
   }
-
 });
 
 export default defineComponent({
@@ -43,22 +42,21 @@ export default defineComponent({
 
   mounted() {
     this.addCopyButtons();
+    this.limitImageSize();
   },
 
   updated() {
     nextTick(() => {
       this.addCopyButtons();
+      this.limitImageSize();
     });
   },
 
   methods: {
     addCopyButtons() {
-      // 获取所有 pre 元素（代码块）
       const preElements = document.querySelectorAll('.markdown-output pre');
       
-      // 遍历所有代码块
       preElements.forEach((pre) => {
-        // 避免重复添加按钮
         if (pre.querySelector('.copy-button')) return;
 
         const button = document.createElement('button');
@@ -66,7 +64,6 @@ export default defineComponent({
         button.textContent = '复制';
         button.addEventListener('click', this.handleCopy);
         
-        // 添加定位容器
         const wrapper = document.createElement('div');
         wrapper.style.position = 'relative';
         wrapper.className = 'code-wrapper';
@@ -96,34 +93,73 @@ export default defineComponent({
       setTimeout(() => {
         button.textContent = originalText;
       }, 1500);
+    },
+
+    limitImageSize() {
+      const images = document.querySelectorAll('.markdown-output img');
+      images.forEach((img) => {
+        (img as HTMLImageElement).style.maxWidth = '100%';
+        (img as HTMLImageElement).style.maxHeight = '400px'; // 你可以根据需要调整这个值
+        (img as HTMLImageElement).style.height = 'auto';
+      });
     }
   }
 });
 </script>
 
 <style>
+/* 使用适合代码的字体 */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
+
 .markdown-output {
-  border: 1px solid #ddd;
-  background-color: #f9f9f9;
+  font-family: Arial, sans-serif;
+}
+
+.markdown-output pre {
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: #2d2d2d; /* 暗色背景 */
+  color: #f8f8f2; /* 浅色文字 */
+  padding: 16px;
   border-radius: 8px;
-  padding: 1rem;
+  overflow: auto;
+  position: relative;
+  margin: 16px 0;
+}
+
+.markdown-output code {
+  font-family: inherit;
+  background-color: transparent;
+  padding: 0;
+}
+
+.code-language {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 12px;
+  color: #999;
+  font-family: Arial, sans-serif;
+  text-transform: uppercase;
 }
 
 .copy-button {
   position: absolute;
   right: 10px;
-  top: 10px;
-  padding: 2px 10px;
-  font-size: 0.8em;
-  background-color: #e2e8f0;
-  border: 1px solid #cbd5e1;
+  top: 50px;
+  padding: 4px 12px;
+  font-size: 12px;
+  background-color: #444;
+  color: #fff;
+  border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
 }
 
 .copy-button:hover {
-  background-color: #cbd5e1;
+  background-color: #666;
 }
 
 .code-wrapper {
@@ -131,6 +167,12 @@ export default defineComponent({
   border-radius: 8px;
   overflow: auto;
   word-break: break-all;
+}
 
+.markdown-output img {
+  max-width: 100%;
+  max-height: 400px; /* 你可以根据需要调整这个值 */
+  height: auto;
+  border-radius: 8px;
 }
 </style>
