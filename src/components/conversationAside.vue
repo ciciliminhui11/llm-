@@ -1,11 +1,15 @@
 <template>
-    <div style="text-align: center; padding: 10px; padding-top: 20px; padding-bottom: 30px;">
-    <div style="display: flex; justify-content: left; align-items: center;">
-      <img src="../assets/coze.png" alt="coze" style=" margin-right: 10px; max-width: 40px; max-height: 40px;"/>
-      <img src="../assets/coze-text.png" alt="coze-text" style="max-width: 100px; max-height: 100px;"/>
+    <div class="header">
+        <div class="collapse-button">
+            <collapse-button v-if="!isCollapsed"></collapse-button>
+        </div>
+        <div class="logo">
+            <img src="../assets/coze.png" alt="coze" class="logo-img"/>
+            <img src="../assets/coze-text.png" alt="coze-text" class="logo-text"/>
+        </div>
+        <button v-if="isMobile" class="close-btn" @click="closeAside">×</button>
     </div>
-  </div>
-    <el-menu :default-active="activeIndex" class="el-menu-vertical-demo" @select="handleSelect" style="height: calc(100% - 100px); overflow-y: auto; overflow-x: hidden;  padding: 10px;">
+    <el-menu :default-active="activeIndex" class="el-menu-vertical-demo" @select="handleSelect">
         <el-menu-item v-for="conversation in conversations" :key="conversation.id" :index="conversation.id">
             {{ conversation.name }}
         </el-menu-item>
@@ -15,41 +19,50 @@
 <script lang="ts">
 import { defineComponent, ref, computed, watch } from 'vue';
 import { useStore } from 'vuex';
+import CollapseButton from './collapseButton.vue';
 
 export default defineComponent({
     name: 'ConversationAside',
-    setup() {
+    components: {
+        CollapseButton
+    },
+    emits: ['close'],
+    setup(_, { emit }) {
         const store = useStore();
         const activeIndex = ref(store.state.selectedConversationId);
         const conversations = computed(() => store.getters.conversations);
+        const isCollapsed = computed(() => store.state.isAsideCollapsed);
+        const isMobile = computed(() => window.innerWidth < 768);
 
-        // 监听新会话的添加
-        watch(() => store.state.conversations, (newConversations) => {
-            if (newConversations.length > 0 && newConversations[0].id !== activeIndex.value) {
-                activeIndex.value = newConversations[0].id;
-            }
-        });
-
-        // 监听 selectedConversationId 的变化
         watch(() => store.state.selectedConversationId, (newId) => {
             activeIndex.value = newId;
         });
 
-        const handleSelect = (key: string, keyPath: string[]) => {
-            console.log(`Selected: ${key}, Path: ${keyPath}`);
+        const handleSelect = (key: string) => {
             store.dispatch('setSelectedConversationId', key);
+            if (isMobile.value) {
+                emit('close');
+            }
+        };
+
+        const closeAside = () => {
+            emit('close');
         };
 
         return {
             activeIndex,
             handleSelect,
             conversations,
+            isCollapsed,
+            isMobile,
+            closeAside
         };
     },
 });
 </script>
 
 <style scoped>
+
 .el-menu-vertical-demo {
     border-right: none;
     background-color: #f5f5f5ed;
@@ -82,7 +95,7 @@ export default defineComponent({
 }
 /* 设置 el-menu-item 悬浮时的样式 */
 .el-menu-item:hover {
-  background-color: #f0f0f0; /* 悬浮时的背景色 */
+  background-color: #e1eeff; /* 悬浮时的背景色 */
   border-radius: 24px; /* 圆角效果 */
 }
 
@@ -95,5 +108,35 @@ export default defineComponent({
 .el-menu-item:not(.is-active) {
   border-radius: 24px; /* 确保取消选中项时依然有圆角 */
   transition: none;
+}
+.header {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    padding-top: 10px;
+    padding-bottom: 30px;
+}
+
+.collapse-button {
+    flex-shrink: 0;
+    width: 50px; /* 固定宽度，确保按钮消失时占位不变 */
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+.logo-img {
+    margin-right: 10px;
+    max-width: 40px;
+    max-height: 40px;
+}
+
+.logo-text {
+    max-width: 100px;
+    max-height: 100px;
 }
 </style>

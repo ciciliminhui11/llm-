@@ -2,7 +2,7 @@
 <template>
     <el-container class="chat-container">
         <el-header class="chat-header">
-            <collapse-button></collapse-button>
+            <collapse-button v-if="isCollapsed"></collapse-button>
             <div class="chat-select-container">
                 <span class="chat-label">智能体：</span>
                 <el-select v-model="selectedBot" placeholder="Select Chat" class="chat-select">
@@ -39,11 +39,14 @@
                             <img :src="message.icon_url" alt="icon" class="assistant-icon" />
                             <span class="assistant-name">{{ message.bot_name }}</span>
                         </div>
-
-                        <!-- 消息气泡 -->
+                        <div v-if="message.reasoning_content" class="reasoning-content">
+                                <markdown-renderer :markdownContent="message.reasoning_content" />
+                            </div>
                         <div class="message-bubble">
+                            
                             <markdown-renderer :markdownContent="message.content" />
                             <span v-if="message.showLoading" class="loading-dot">•</span>
+                            
                             <div v-if="message.sender === 'user' && message.fileList.length">
                                 <div v-for="file in message.fileList" :key="file.file_id" class="file-attachment">
                                     附件：{{ file.name }}
@@ -141,6 +144,7 @@ export default defineComponent({
         const inputMessage = ref('');
         const selectedBot = ref('7469023039142395904');
         const messageList = ref<any[]>([]);
+        const isCollapsed = computed(() => store.state.isAsideCollapsed);
 
         // 监听 selectedConversationId 的变化
         const message = new Message();
@@ -163,6 +167,7 @@ export default defineComponent({
                         const sender = msg.role === 'assistant' ? 'assistant' : 'user';
                         const bot_id = msg.role === 'assistant' ? msg.bot_id : '';
                         let content = msg.content;
+                        let reasoning_content = msg.reasoning_content || '';
                         let fileList: any[] = [];
                         let icon_url = '';
                         let bot_name = '';
@@ -197,6 +202,7 @@ export default defineComponent({
                             sender,
                             bot_id,
                             content,
+                            reasoning_content,
                             fileList,
                             icon_url,
                             bot_name
@@ -315,6 +321,7 @@ export default defineComponent({
                 const assistantMessage = {
                     sender: 'assistant',
                     content: '',
+                    reasoning_content:'',
                     bot_id: selectedBotInfo.value.bot_id,
                     icon_url: selectedBotInfo.value.icon_url,
                     bot_name: selectedBotInfo.value.bot_name,
@@ -327,6 +334,7 @@ export default defineComponent({
                     const lastAssistantMessage = messageList.value.findLast(msg => msg.sender === 'assistant');
                     if (lastAssistantMessage) {
                         lastAssistantMessage.content = chunk.content;
+                        lastAssistantMessage.reasoning_content = chunk.reasoning_content;
                         if (chunk.status === "chat_completed") {
                             lastAssistantMessage.showLoading = false;
 
@@ -341,7 +349,6 @@ export default defineComponent({
                             }
                         }
                     }
-                    console.log('chunk', chunk);
                 });
 
                 // 清空输入框和上传文件列表
@@ -431,6 +438,8 @@ export default defineComponent({
             });
         };
 
+      
+
         return {
             messages,
             inputMessage,
@@ -447,7 +456,8 @@ export default defineComponent({
             messageList,
             selectedBotInfo,
             copyToClipboard,
-            scrollToBottom
+            scrollToBottom,
+            isCollapsed,
         };
     },
 });
@@ -715,6 +725,16 @@ chat-select {
     color: #666;
     font-size: 0.9em;
 }
+
+.reasoning-content {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #e0f7fa; /* 浅蓝色背景 */
+    border-left: 4px solid #0095ff;
+    border-radius: 4px;
+    color: rgba(0, 0, 0, 0.5); /* 半透明字体 */
+}
+
 
 @keyframes blink {
 

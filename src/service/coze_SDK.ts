@@ -58,10 +58,12 @@ export class Chat {
         status: "",
         content_type: "",
         content: "",
+        reasoning_content:"",
       };
 
       // 假设 response 是流式返回的数据
       for await (const part of response) {
+        console.log(JSON.stringify(part));
         if (part.event === ChatEventType.CONVERSATION_CHAT_CREATED) {
           console.log('[START]已经开始加载');
           msg.bot_id = part.data.bot_id;
@@ -75,6 +77,7 @@ export class Chat {
         else if (part.event === ChatEventType.CONVERSATION_MESSAGE_DELTA) {
           msg.content_type = part.data.content_type;
           msg.content += part.data.content || "";//加入内容
+          msg.reasoning_content += part.data.reasoning_content || "";//加入内容
           msg.status = "loading";
           console.log(part.data.content)
           console.log(msg.content)

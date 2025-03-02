@@ -2,8 +2,8 @@ import { createStore } from 'vuex';
 
 export default createStore({
   state: {
-    asideWidth: '260px', // aside 的初始宽度
-    isAsideCollapsed: false, // aside 的折叠状态
+    asideWidth: '0px', // aside 的初始宽度
+    isAsideCollapsed: true, // aside 的折叠状态
     selectedConversationId: '', // 选中的会话 ID
     conversations: [
       { id: '7477135731110985737', name: '你好' },
