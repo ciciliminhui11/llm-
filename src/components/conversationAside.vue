@@ -7,9 +7,8 @@
             <img src="../assets/coze.png" alt="coze" class="logo-img"/>
             <img src="../assets/coze-text.png" alt="coze-text" class="logo-text"/>
         </div>
-        <button v-if="isMobile" class="close-btn" @click="closeAside">×</button>
     </div>
-    <el-menu :default-active="activeIndex" class="el-menu-vertical-demo" @select="handleSelect">
+    <el-menu :default-active="activeIndex" class="el-menu-vertical-demo" @select="handleSelect" style="height: calc(100% - 100px); overflow-y: auto; overflow-x: hidden; padding: 10px;">
         <el-menu-item v-for="conversation in conversations" :key="conversation.id" :index="conversation.id">
             {{ conversation.name }}
         </el-menu-item>
@@ -26,43 +25,42 @@ export default defineComponent({
     components: {
         CollapseButton
     },
-    emits: ['close'],
-    setup(_, { emit }) {
+    setup() {
         const store = useStore();
         const activeIndex = ref(store.state.selectedConversationId);
         const conversations = computed(() => store.getters.conversations);
         const isCollapsed = computed(() => store.state.isAsideCollapsed);
-        const isMobile = computed(() => window.innerWidth < 768);
 
+        // 监听新会话的添加
+        watch(() => store.state.conversations, (newConversations) => {
+            if (newConversations.length > 0 && newConversations[0].id !== activeIndex.value) {
+                activeIndex.value = newConversations[0].id;
+            }
+        });
+
+        // 监听 selectedConversationId 的变化
         watch(() => store.state.selectedConversationId, (newId) => {
             activeIndex.value = newId;
         });
 
-        const handleSelect = (key: string) => {
+        const handleSelect = (key: string, keyPath: string[]) => {
+            console.log(`Selected: ${key}, Path: ${keyPath}`);
             store.dispatch('setSelectedConversationId', key);
-            if (isMobile.value) {
-                emit('close');
-            }
+            store.dispatch('toggleAside'); 
         };
 
-        const closeAside = () => {
-            emit('close');
-        };
 
         return {
             activeIndex,
             handleSelect,
             conversations,
             isCollapsed,
-            isMobile,
-            closeAside
         };
     },
 });
 </script>
 
 <style scoped>
-
 .el-menu-vertical-demo {
     border-right: none;
     background-color: #f5f5f5ed;

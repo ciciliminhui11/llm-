@@ -13,7 +13,7 @@
       <conversationAside></conversationAside>
     </el-aside>
     <!-- 主内容区域 -->
-    <chat :class="{ 'chat-blur': isMobile && isAsideOpen }"></chat>
+    <chat :class="{ 'chat-blur': isMobile && shouldBlur }" :is-mobile="isMobile"></chat>
   </el-container>
 </template>
 
@@ -51,19 +51,24 @@ const isAsideOpen = computed(() => {
 // 控制 zIndex 是否置顶
 const shouldZIndexTop = ref(false);
 
+// 控制 chat 是否模糊
+const shouldBlur = ref(false);
+
 // 监听 isAsideOpen 的变化
 watch(isAsideOpen, (newVal) => {
   console.log('isAsideOpen', newVal);
   if (isMobile.value) {
     if (newVal) {
-      // 如果是移动端且 aside 展开，直接置顶
+      // 如果是移动端且 aside 展开，直接置顶并添加模糊效果
       shouldZIndexTop.value = true;
-      console.log('shouldZIndexTop展开', shouldZIndexTop.value);
+      shouldBlur.value = true;
+      console.log('展开：置顶和模糊生效');
     } else {
-      // 如果是移动端且 aside 折叠，等待 0.4s 后取消置顶
+      // 如果是移动端且 aside 折叠，等待 0.4s 后取消置顶和模糊效果
       setTimeout(() => {
         shouldZIndexTop.value = false;
-        console.log('shouldZIndexTop折叠', shouldZIndexTop.value);
+        shouldBlur.value = false;
+        console.log('折叠：置顶和模糊取消');
       }, 400); // 400ms 对应动画时长
     }
   }
@@ -86,5 +91,11 @@ const asideWidth = computed(() => {
 .chat-blur {
   filter: blur(4px); /* 模糊程度 */
   transition: filter 0.4s ease; /* 过渡效果 */
+}
+
+/* 确保 filter 的初始值 */
+chat {
+  filter: blur(0);
+  transition: filter 0.4s ease;
 }
 </style>

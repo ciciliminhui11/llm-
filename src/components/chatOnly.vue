@@ -13,7 +13,7 @@
                     </el-option>
                 </el-select>
             </div>
-            <el-popover trigger="hover" :popper-style="{ minWidth: '0px', width: '88px' }">
+            <el-popover trigger="hover" :popper-style="{ minWidth: '0px', width: '88px' }" :disabled="isMobile">
                 <template #reference>
                     <el-button type="primary" @click="newChat" class="custom-button" circle size="large">
                         <img src="../assets/newchat.png" alt="New Chat" />
@@ -40,13 +40,13 @@
                             <span class="assistant-name">{{ message.bot_name }}</span>
                         </div>
                         <div v-if="message.reasoning_content" class="reasoning-content">
-                                <markdown-renderer :markdownContent="message.reasoning_content" />
-                            </div>
+                            <markdown-renderer :markdownContent="message.reasoning_content" />
+                        </div>
                         <div class="message-bubble">
-                            
+
                             <markdown-renderer :markdownContent="message.content" />
                             <span v-if="message.showLoading" class="loading-dot">•</span>
-                            
+
                             <div v-if="message.sender === 'user' && message.fileList.length">
                                 <div v-for="file in message.fileList" :key="file.file_id" class="file-attachment">
                                     附件：{{ file.name }}
@@ -90,7 +90,7 @@
             </el-collapse>
         </div>
         <div class="chat-input">
-            <el-popover trigger="hover" width="300">
+            <el-popover trigger="hover" width="300" :disabled="isMobile">
                 <template #reference>
                     <el-upload action="" :http-request="uploadFile" :before-upload="beforeUpload"
                         :show-file-list="false" :on-success="uploadSuccess">
@@ -109,7 +109,7 @@
             <el-input v-model="inputMessage" placeholder="Type your message..." class="inputtext-class"
                 :autosize="{ minRows: 2, maxRows: 10 }" type="textarea" resize="none"
                 @keyup.enter.native="sendMessage"></el-input>
-            <el-popover trigger="hover" :popper-style="{ minWidth: '0px', width: '88px' }">
+            <el-popover trigger="hover" :popper-style="{ minWidth: '0px', width: '88px' }" :disabled="isMobile">
 
                 <template #reference>
                     <el-button type="primary" @click="sendMessage" :disabled="!inputMessage.trim()" circle size="large">
@@ -123,344 +123,329 @@
     </el-container>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, watch, computed } from 'vue';
+<script lang="ts" setup>
+import { ref, watch, computed } from 'vue';
 import { useStore } from 'vuex';
 import { ElMessage } from 'element-plus';
 import { Bot, File, Message, Chat } from '../service/coze_SDK'
 import CollapseButton from './collapseButton.vue';
 import MarkdownRenderer from '../components/markdown.vue'; //markdown渲染组件
 
-
-export default defineComponent({
-    name: 'ChatOnly',
-    components: {
-        CollapseButton,
-        MarkdownRenderer
-    },
-    setup() {
-        const store = useStore();
-        const messages = ref<{ id: number; text: string }[]>([]);
-        const inputMessage = ref('');
-        const selectedBot = ref('7469023039142395904');
-        const messageList = ref<any[]>([]);
-        const isCollapsed = computed(() => store.state.isAsideCollapsed);
-
-        // 监听 selectedConversationId 的变化
-        const message = new Message();
-        watch(() => store.state.selectedConversationId, async (newId) => {
-            if (newId) {
-                // 在这里进行网络请求
-                console.log(`Selected Conversation ID: ${newId}`);
-                messageList.value = [];
-                // ...网络请求逻辑...
-                const unchangedMessages = await message.message_list(newId);
-                console.log(unchangedMessages);
-                if (Array.isArray(unchangedMessages)) {
-                    // 匹配并显示选中的智能体
-                    const assistantMessage = unchangedMessages.find(msg => msg.role === 'assistant');
-                    if (assistantMessage && assistantMessage.bot_id) {
-                        selectedBot.value = assistantMessage.bot_id;
-                    }
-
-                    messageList.value = unchangedMessages.map((msg: any) => {
-                        const sender = msg.role === 'assistant' ? 'assistant' : 'user';
-                        const bot_id = msg.role === 'assistant' ? msg.bot_id : '';
-                        let content = msg.content;
-                        let reasoning_content = msg.reasoning_content || '';
-                        let fileList: any[] = [];
-                        let icon_url = '';
-                        let bot_name = '';
-
-                        if (msg.role === 'assistant') {
-                            const bot = bots.value.find((b: any) => b.bot_id === bot_id);
-                            icon_url = bot ? bot.icon_url : '';
-                            bot_name = bot ? bot.bot_name : '';
-                        } else {
-                            icon_url = '../assets/user.png';
-                        }
-
-                        if (msg.content_type === 'object_string') {
-                            try {
-                                const parsedContent = JSON.parse(msg.content);
-                                if (Array.isArray(parsedContent)) {
-                                    content = parsedContent.map((item: any) => {
-                                        if (item.type === 'text') {
-                                            return item.text;
-                                        } else {
-                                            fileList.push({ file_id: item.file_id, name: item.name });
-                                            return;
-                                        }
-                                    }).join(' ');
-                                }
-                            } catch (error) {
-                                console.error('Error parsing content:', error);
-                            }
-                        }
-
-                        return {
-                            sender,
-                            bot_id,
-                            content,
-                            reasoning_content,
-                            fileList,
-                            icon_url,
-                            bot_name
-                        };
-                    });
-
-                    console.log(messageList.value);
-                    setTimeout(() => {
-                        scrollToBottom();
-                    }, 100);
-
-                } else {
-                    console.error('Invalid message list format:', unchangedMessages);
-                    ElMessage.error('找不到该会话的内容');
-                }
-            }
-        });
-        //智能体选择
-        const bots = ref<any[]>([{
-            bot_id: "7469023039142395904",
-            bot_name: "ai机器人",
-            description: "可以网页搜索、处理图片（文件/链接）、图片生成（依据图片/文字）、识别pdf，以回答多种问题。",
-            icon_url: "https://lf26-appstore-sign.oceancloudapi.com/ocean-cloud-tos/FileBizType.BIZ_BOT_ICON/2373196263463619_1740890808010731756_8PVOxWWNut.png?lk3s=50ccb0c5&x-expires=1740977240&x-signature=t31C2h5NfaRtlI3JP7%2BxZDw7TOg%3D",
-            publish_time: "1739095367"
-        }]);
-        const bot = new Bot();
-        bot.bots_list().then((result) => {
-            if (result) {
-                bots.value = result;
-                console.log(bots.value);
-            }
-        }).catch((error) => {
-            console.error('Error fetching bots:', error);
-            ElMessage.error('Error fetching bots');
-        });
-        //智能体选择结束
-
-        const selectedBotInfo = computed(() => {
-            return bots.value.find(bot => bot.bot_id === selectedBot.value) || {};
-        });
-
-
-
-        const newChat = async () => {
-            messageList.value = [];
-            store.dispatch('setSelectedConversationId', '');
-        };
-
-
-        const chat = new Chat();  //实例化Chat类
-        const scrollToBottom = () => {
-            const chatWrapper = document.querySelector('.chat-wrapper');
-            if (!chatWrapper) return;
-
-            const start = chatWrapper.scrollTop;
-            const end = chatWrapper.scrollHeight;
-            const duration = 1000; // 滚动持续时间（毫秒）
-            const startTime = performance.now();
-
-            const animateScroll = (currentTime: number) => {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1); // 计算进度，范围 0~1
-                chatWrapper.scrollTop = start + (end - start) * easeOutQuad(progress);
-
-                if (progress < 1) {
-                    requestAnimationFrame(animateScroll);
-                }
-            };
-
-            requestAnimationFrame(animateScroll);
-        };
-
-        // 缓动函数（让滚动更自然）
-        const easeOutQuad = (t: number) => {
-            return t * (2 - t);
-        };
-
-        const sendMessage = async () => {
-            if (inputMessage.value.trim()) {
-                scrollToBottom()
-                const conversationId = store.state.selectedConversationId;
-                const botId = selectedBot.value;
-                const messageContent = inputMessage.value.trim();
-                const messageListContent = [];
-
-                if (uploadedFiles.value.length > 0) {
-                    const content = [
-                        { type: "text", text: messageContent },
-                        ...uploadedFiles.value.map(file => ({ type: "file", file_id: file.id, name: file.name }))
-                    ];
-                    messageListContent.push({
-                        role: "user",
-                        content,
-                        content_type: "object_string"
-                    });
-                } else {
-                    messageListContent.push({
-                        role: "user",
-                        content: messageContent,
-                        content_type: "text"
-                    });
-                }
-
-                // 将用户消息添加到 messageList
-                messageList.value.push({
-                    sender: 'user',
-                    content: messageContent,
-                    icon_url: '../assets/user.png',
-                    bot_name: '',
-                    fileList: uploadedFiles.value
-                });
-                inputMessage.value = '';
-                uploadedFiles.value = [];
-
-                // 预定好的 assistant 回复空内容
-                const assistantMessage = {
-                    sender: 'assistant',
-                    content: '',
-                    reasoning_content:'',
-                    bot_id: selectedBotInfo.value.bot_id,
-                    icon_url: selectedBotInfo.value.icon_url,
-                    bot_name: selectedBotInfo.value.bot_name,
-                    showLoading: true
-                };
-                messageList.value.push(assistantMessage);
-
-                await chat.create_chat(conversationId, botId, messageListContent, (chunk) => {
-                    // 处理流式更新的内容
-                    const lastAssistantMessage = messageList.value.findLast(msg => msg.sender === 'assistant');
-                    if (lastAssistantMessage) {
-                        lastAssistantMessage.content = chunk.content;
-                        lastAssistantMessage.reasoning_content = chunk.reasoning_content;
-                        if (chunk.status === "chat_completed") {
-                            lastAssistantMessage.showLoading = false;
-
-                            // 如果 messageList 之前为空，则添加新会话
-                            if (messageList.value.length === 2) {
-                                const newConversation = {
-                                    id: chunk.conversation_id,
-                                    name: messageList.value[0].content.substring(0, 13)
-                                };
-                                store.dispatch('addConversation', newConversation);
-                                store.dispatch('setSelectedConversationId', chunk.conversation_id);
-                            }
-                        }
-                    }
-                });
-
-                // 清空输入框和上传文件列表
-                inputMessage.value = '';
-                uploadedFiles.value = [];
-            }
-        };
-
-        watch(messageList, () => {
-            scrollToBottom(); // 当messageList变化时滚动到底部
-        });
-
-
-        //上传文件
-
-        const file = ref<File | null>(null);
-        const uploading = ref(false);
-        const uploadError = ref('');
-
-        const allowedFormats = [
-            'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image.heic', 'image.heif',
-            'image/bmp', 'image/x-pcd', 'image/tiff'
-        ];
-        const maxFileSize = 512 * 1024 * 1024; // 512 MB
-
-        const beforeUpload = (selectedFile: any) => {
-            if (!allowedFormats.includes(selectedFile.type)) {
-                ElMessage.error('不支持的文件格式');
-                return false;
-            }
-            if (selectedFile.size > maxFileSize) {
-                ElMessage.error('文件大小超过限制（512 MB）');
-                return false;
-            }
-            file.value = selectedFile;
-            console.log(file.value);
-            return true;
-        };
-
-        const uploadedFiles = ref<{ name: string, id: string }[]>([]);
-        const activeNames = ref<string[]>(['1']);
-
-        const uploadFile = async () => {
-            if (!file.value) {
-                ElMessage.error('请选择文件');
-                return;
-            }
-
-            // 重置状态
-            uploading.value = true;
-            uploadError.value = '';
-
-            try {
-                const files = new File();
-                const response = await files.upload(file.value);
-                console.log('返回值', response);
-                if (response && response.file_name) {
-                    uploadedFiles.value.push({
-                        name: response.file_name,
-                        id: response.id
-                    });
-                }
-            } catch (error) {
-                uploadError.value = '上传失败，请重试';
-                console.error('上传失败:', error);
-            } finally {
-                uploading.value = false;
-            }
-        };
-
-        const uploadSuccess = () => {
-            ElMessage.success('上传成功');
-        };
-
-        const removeFile = (index: number) => {
-            uploadedFiles.value.splice(index, 1);
-        };
-
-        const copyToClipboard = (text: string) => {
-            navigator.clipboard.writeText(text).then(() => {
-                ElMessage.success('复制成功');
-            }).catch(() => {
-                ElMessage.error('复制失败');
-            });
-        };
-
-      
-
-        return {
-            messages,
-            inputMessage,
-            newChat,
-            sendMessage,
-            beforeUpload,
-            uploadFile,
-            uploadSuccess,
-            selectedBot,
-            bots,
-            uploadedFiles,
-            activeNames,
-            removeFile,
-            messageList,
-            selectedBotInfo,
-            copyToClipboard,
-            scrollToBottom,
-            isCollapsed,
-        };
-    },
+const props = defineProps({
+    isMobile: {
+        type: Boolean,
+        required: true
+    }
 });
+
+const store = useStore();
+const inputMessage = ref('');
+const selectedBot = ref('7469023039142395904');
+const messageList = ref<any[]>([]);
+const isCollapsed = computed(() => store.state.isAsideCollapsed);
+
+// 监听 selectedConversationId 的变化
+const message = new Message();
+watch(() => store.state.selectedConversationId, async (newId) => {
+    if (newId) {
+        // 在这里进行网络请求
+        console.log(`Selected Conversation ID: ${newId}`);
+        messageList.value = [];
+        // ...网络请求逻辑...
+        const unchangedMessages = await message.message_list(newId);
+        console.log(unchangedMessages);
+        if (Array.isArray(unchangedMessages)) {
+            // 匹配并显示选中的智能体
+            const assistantMessage = unchangedMessages.find(msg => msg.role === 'assistant');
+            if (assistantMessage && assistantMessage.bot_id) {
+                selectedBot.value = assistantMessage.bot_id;
+            }
+
+            messageList.value = unchangedMessages.map((msg: any) => {
+                const sender = msg.role === 'assistant' ? 'assistant' : 'user';
+                const bot_id = msg.role === 'assistant' ? msg.bot_id : '';
+                let content = msg.content;
+                let reasoning_content = msg.reasoning_content || '';
+                let fileList: any[] = [];
+                let icon_url = '';
+                let bot_name = '';
+
+                if (msg.role === 'assistant') {
+                    const bot = bots.value.find((b: any) => b.bot_id === bot_id);
+                    icon_url = bot ? bot.icon_url : '';
+                    bot_name = bot ? bot.bot_name : '';
+                } else {
+                    icon_url = '../assets/user.png';
+                }
+
+                if (msg.content_type === 'object_string') {
+                    try {
+                        const parsedContent = JSON.parse(msg.content);
+                        if (Array.isArray(parsedContent)) {
+                            content = parsedContent.map((item: any) => {
+                                if (item.type === 'text') {
+                                    return item.text;
+                                } else {
+                                    fileList.push({ file_id: item.file_id, name: item.name });
+                                    return;
+                                }
+                            }).join(' ');
+                        }
+                    } catch (error) {
+                        console.error('Error parsing content:', error);
+                    }
+                }
+
+                return {
+                    sender,
+                    bot_id,
+                    content,
+                    reasoning_content,
+                    fileList,
+                    icon_url,
+                    bot_name
+                };
+            });
+
+            console.log(messageList.value);
+            setTimeout(() => {
+                scrollToBottom();
+            }, 100);
+
+        } else {
+            console.error('Invalid message list format:', unchangedMessages);
+            ElMessage.error('找不到该会话的内容');
+        }
+    }
+});
+//智能体选择
+const bots = ref<any[]>([{
+    bot_id: "7469023039142395904",
+    bot_name: "ai机器人",
+    description: "可以网页搜索、处理图片（文件/链接）、图片生成（依据图片/文字）、识别pdf，以回答多种问题。",
+    icon_url: "https://lf26-appstore-sign.oceancloudapi.com/ocean-cloud-tos/FileBizType.BIZ_BOT_ICON/2373196263463619_1740890808010731756_8PVOxWWNut.png?lk3s=50ccb0c5&x-expires=1740977240&x-signature=t31C2h5NfaRtlI3JP7%2BxZDw7TOg%3D",
+    publish_time: "1739095367"
+}]);
+const bot = new Bot();
+bot.bots_list().then((result) => {
+    if (result) {
+        bots.value = result;
+        console.log(bots.value);
+    }
+}).catch((error) => {
+    console.error('Error fetching bots:', error);
+    ElMessage.error('Error fetching bots');
+});
+//智能体选择结束
+
+const selectedBotInfo = computed(() => {
+    return bots.value.find(bot => bot.bot_id === selectedBot.value) || {};
+});
+
+
+// 监听 isMobile 的变化
+watch(
+    () => props.isMobile,
+    (newVal) => {
+        if (newVal) {
+            console.log('移动端：禁用所有 el-popover');
+        } else {
+            console.log('非移动端：启用所有 el-popover');
+        }
+    },
+    { immediate: true }
+);
+
+const newChat = async () => {
+    messageList.value = [];
+    store.dispatch('setSelectedConversationId', '');
+};
+
+const chat = new Chat();  //实例化Chat类
+const scrollToBottom = () => {
+    const chatWrapper = document.querySelector('.chat-wrapper');
+    if (!chatWrapper) return;
+
+    const start = chatWrapper.scrollTop;
+    const end = chatWrapper.scrollHeight;
+    const duration = 1000; // 滚动持续时间（毫秒）
+    const startTime = performance.now();
+
+    const animateScroll = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1); // 计算进度，范围 0~1
+        chatWrapper.scrollTop = start + (end - start) * easeOutQuad(progress);
+
+        if (progress < 1) {
+            requestAnimationFrame(animateScroll);
+        }
+    };
+
+    requestAnimationFrame(animateScroll);
+};
+
+// 缓动函数（让滚动更自然）
+const easeOutQuad = (t: number) => {
+    return t * (2 - t);
+};
+
+const sendMessage = async () => {
+    if (inputMessage.value.trim()) {
+        scrollToBottom()
+        const conversationId = store.state.selectedConversationId;
+        const botId = selectedBot.value;
+        const messageContent = inputMessage.value.trim();
+        const messageListContent = [];
+
+        if (uploadedFiles.value.length > 0) {
+            const content = [
+                { type: "text", text: messageContent },
+                ...uploadedFiles.value.map(file => ({ type: "file", file_id: file.id, name: file.name }))
+            ];
+            messageListContent.push({
+                role: "user",
+                content,
+                content_type: "object_string"
+            });
+        } else {
+            messageListContent.push({
+                role: "user",
+                content: messageContent,
+                content_type: "text"
+            });
+        }
+
+        // 将用户消息添加到 messageList
+        messageList.value.push({
+            sender: 'user',
+            content: messageContent,
+            icon_url: '../assets/user.png',
+            bot_name: '',
+            fileList: uploadedFiles.value
+        });
+        inputMessage.value = '';
+        uploadedFiles.value = [];
+
+        // 预定好的 assistant 回复空内容
+        const assistantMessage = {
+            sender: 'assistant',
+            content: '',
+            reasoning_content: '',
+            bot_id: selectedBotInfo.value.bot_id,
+            icon_url: selectedBotInfo.value.icon_url,
+            bot_name: selectedBotInfo.value.bot_name,
+            showLoading: true
+        };
+        messageList.value.push(assistantMessage);
+
+        await chat.create_chat(conversationId, botId, messageListContent, (chunk) => {
+            // 处理流式更新的内容
+            const lastAssistantMessage = messageList.value.findLast(msg => msg.sender === 'assistant');
+            if (lastAssistantMessage) {
+                lastAssistantMessage.content = chunk.content;
+                lastAssistantMessage.reasoning_content = chunk.reasoning_content;
+                if (chunk.status === "chat_completed") {
+                    lastAssistantMessage.showLoading = false;
+
+                    // 如果 messageList 之前为空，则添加新会话
+                    if (messageList.value.length === 2) {
+                        const newConversation = {
+                            id: chunk.conversation_id,
+                            name: messageList.value[0].content.substring(0, 13)
+                        };
+                        store.dispatch('addConversation', newConversation);
+                        store.dispatch('setSelectedConversationId', chunk.conversation_id);
+                    }
+                }
+            }
+        });
+
+        // 清空输入框和上传文件列表
+        inputMessage.value = '';
+        uploadedFiles.value = [];
+    }
+};
+
+watch(messageList, () => {
+    scrollToBottom(); // 当messageList变化时滚动到底部
+});
+
+//上传文件
+
+const file = ref<File | null>(null);
+const uploading = ref(false);
+const uploadError = ref('');
+
+const allowedFormats = [
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image.heic', 'image.heif',
+    'image/bmp', 'image/x-pcd', 'image/tiff'
+];
+const maxFileSize = 512 * 1024 * 1024; // 512 MB
+
+const beforeUpload = (selectedFile: any) => {
+    if (!allowedFormats.includes(selectedFile.type)) {
+        ElMessage.error('不支持的文件格式');
+        return false;
+    }
+    if (selectedFile.size > maxFileSize) {
+        ElMessage.error('文件大小超过限制（512 MB）');
+        return false;
+    }
+    file.value = selectedFile;
+    console.log(file.value);
+    return true;
+};
+
+const uploadedFiles = ref<{ name: string, id: string }[]>([]);
+const activeNames = ref<string[]>(['1']);
+
+const uploadFile = async () => {
+    if (!file.value) {
+        ElMessage.error('请选择文件');
+        return;
+    }
+
+    // 重置状态
+    uploading.value = true;
+    uploadError.value = '';
+
+    try {
+        const files = new File();
+        const response = await files.upload(file.value);
+        console.log('返回值', response);
+        if (response && response.file_name) {
+            uploadedFiles.value.push({
+                name: response.file_name,
+                id: response.id
+            });
+        }
+    } catch (error) {
+        uploadError.value = '上传失败，请重试';
+        console.error('上传失败:', error);
+    } finally {
+        uploading.value = false;
+    }
+};
+
+const uploadSuccess = () => {
+    ElMessage.success('上传成功');
+};
+
+const removeFile = (index: number) => {
+    uploadedFiles.value.splice(index, 1);
+};
+
+const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+        ElMessage.success('复制成功');
+    }).catch(() => {
+        ElMessage.error('复制失败');
+    });
+};
+
 </script>
 
 <style scoped>
@@ -638,12 +623,15 @@ chat-select {
 
 .file-list-wrapper {
     width: 40%;
-    max-width: 300px; /* 限制最大宽度 */
+    min-width: 300px;
+    /* 限制最大宽度 */
     margin-left: 1rem;
+    
 }
 
 .file-list-container {
     border-top: 1px solid #dfecff;
+    border-right: 1px solid #dfecff;
 
 }
 
@@ -729,10 +717,12 @@ chat-select {
 .reasoning-content {
     margin-top: 10px;
     padding: 10px;
-    background-color: #e0f7fa; /* 浅蓝色背景 */
+    background-color: #e0f7fa;
+    /* 浅蓝色背景 */
     border-left: 4px solid #0095ff;
     border-radius: 4px;
-    color: rgba(0, 0, 0, 0.5); /* 半透明字体 */
+    color: rgba(0, 0, 0, 0.5);
+    /* 半透明字体 */
 }
 
 
