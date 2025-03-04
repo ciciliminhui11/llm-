@@ -6,6 +6,7 @@
     "test": "vitest",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "coverage": "vitest run --coverage",
     "lint": "eslint . --fix",
     "tsc": "tsc"
   },
@@ -53,4 +54,5 @@
     "not dead",
     "not ie 11"
   ]
+
 }
