@@ -7,7 +7,7 @@ export class Chat {
   constructor() {
     // 创建 API 客户端实例
     this.client = new CozeAPI({
-      token: 'pat_kYRPc16sLCJafNqPh0x5AUS38NugfXeGDW3kElnrqMYzkYTQTIzxY3PYjKGdqyLc',
+      token: 'pat_Fd9NLUoKYhmnZSBneY0eWpv2GtveJTPg5GdGuy274UYAKwnmGLoRr4HRb9b8ruAh',
       allowPersonalAccessTokenInBrowser: true,
       baseURL: 'https://api.coze.cn'
     });
@@ -179,7 +179,7 @@ export class Bot {
   constructor() {
     // 创建 API 客户端实例
     this.client = new CozeAPI({
-      token: 'pat_kYRPc16sLCJafNqPh0x5AUS38NugfXeGDW3kElnrqMYzkYTQTIzxY3PYjKGdqyLc',
+      token: 'pat_Fd9NLUoKYhmnZSBneY0eWpv2GtveJTPg5GdGuy274UYAKwnmGLoRr4HRb9b8ruAh',
       allowPersonalAccessTokenInBrowser: true,
       baseURL: 'https://api.coze.cn'
     });
@@ -215,7 +215,7 @@ export class Conversation {
   constructor() {
     // 创建 API 客户端实例
     this.client = new CozeAPI({
-      token: 'pat_kYRPc16sLCJafNqPh0x5AUS38NugfXeGDW3kElnrqMYzkYTQTIzxY3PYjKGdqyLc',
+      token: 'pat_Fd9NLUoKYhmnZSBneY0eWpv2GtveJTPg5GdGuy274UYAKwnmGLoRr4HRb9b8ruAh',
       allowPersonalAccessTokenInBrowser: true,
       baseURL: 'https://api.coze.cn'
     });
@@ -280,7 +280,7 @@ export class Message {
   constructor() {
     // 创建 API 客户端实例
     this.client = new CozeAPI({
-      token: 'pat_kYRPc16sLCJafNqPh0x5AUS38NugfXeGDW3kElnrqMYzkYTQTIzxY3PYjKGdqyLc',
+      token: 'pat_Fd9NLUoKYhmnZSBneY0eWpv2GtveJTPg5GdGuy274UYAKwnmGLoRr4HRb9b8ruAh',
       allowPersonalAccessTokenInBrowser: true,
       baseURL: 'https://api.coze.cn'
     });
@@ -332,7 +332,7 @@ export class File {
       const response = await axios.post(' https://api.coze.cn/v1/files/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': 'Bearer pat_kYRPc16sLCJafNqPh0x5AUS38NugfXeGDW3kElnrqMYzkYTQTIzxY3PYjKGdqyLc',  // 添加 Authorization 头
+          'Authorization': 'Bearer pat_Fd9NLUoKYhmnZSBneY0eWpv2GtveJTPg5GdGuy274UYAKwnmGLoRr4HRb9b8ruAh',  // 添加 Authorization 头
         }
       });
       // 上传成功
